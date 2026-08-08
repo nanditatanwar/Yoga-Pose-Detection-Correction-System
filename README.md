@@ -4,8 +4,7 @@ Real-time yoga pose detection and correction using computer vision and deep lear
 
 <img width="1044" height="806" alt="image" src="https://github.com/user-attachments/assets/814bb8e2-42c9-496f-b319-effbc2f67fa2" />
 <img width="751" height="866" alt="image" src="https://github.com/user-attachments/assets/84d9245b-aae3-4836-8a41-c1c79b3ddb66" />
-![Uploading image.png…]()
-
+<img width="773" height="841" alt="image" src="https://github.com/user-attachments/assets/0e1ce249-cc19-446f-a9a6-b7760b5b41c9" />
 
 📖 Overview
 
