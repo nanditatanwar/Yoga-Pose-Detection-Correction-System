@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YogaFlow AI | Premium Yoga Correction</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Color Palette */
+        :root {
+            --bg-primary: #F2F0D8;
+            --card-bg: #D9C39A;
+            --accent: #BF9004;
+            --text-primary: #590202;
+            --text-secondary: #A69485;
+            --shadow: rgba(89, 2, 2, 0.08);
+            --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            background: var(--accent);
+            color: var(--bg-primary);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .logo-text h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-text p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.2rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .nav-link:hover {
+            background: rgba(191, 144, 4, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            max-width: 800px;
+            margin: 3rem auto 5rem;
+        }
+
+        .hero h2 {
+            font-size: 3.2rem;
+            font-weight: 300;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 3rem;
+        }
+
+        /* Feature Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2.5rem;
+            margin: 4rem 0;
+        }
+
+        /* Feature Card */
+        .feature-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 3rem;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+            box-shadow: 0 8px 32px var(--shadow);
+            cursor: pointer;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-12px);
+            box-shadow: 0 20px 60px rgba(89, 2, 2, 0.15);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, var(--accent), var(--text-primary));
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .card-icon {
+            font-size: 3.5rem;
+            color: var(--accent);
+            margin-bottom: 2rem;
+            transition: var(--transition);
+        }
+
+        .feature-card:hover .card-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .card-title {
+            font-size: 2.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            line-height: 1.3;
+        }
+
+        .card-description {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            line-height: 1.7;
+            margin-bottom: 2.5rem;
+            flex-grow: 1;
+        }
+
+        .features-list {
+            list-style: none;
+            margin-bottom: 2.5rem;
+        }
+
+        .features-list li {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .features-list i {
+            color: var(--accent);
+            font-size: 1.2rem;
+        }
+
+        /* CTA Button */
+        .cta-button {
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            padding: 1.2rem 2.5rem;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            width: 100%;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 16px rgba(191, 144, 4, 0.3);
+        }
+
+        .cta-button:hover {
+            background: var(--text-primary);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(89, 2, 2, 0.3);
+        }
+
+        .cta-button i {
+            transition: var(--transition);
+        }
+
+        .cta-button:hover i {
+            transform: translateX(5px);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 3rem 0;
+            margin-top: 4rem;
+            border-top: 1px solid rgba(166, 148, 133, 0.2);
+        }
+
+        .footer-text {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Particle Background */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            background: var(--accent);
+            opacity: 0.1;
+            border-radius: 50%;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1100px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .feature-card {
+                min-height: 450px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+            
+            .nav-links {
+                gap: 1rem;
+            }
+            
+            .hero h2 {
+                font-size: 2.5rem;
+            }
+            
+            .feature-card {
+                padding: 2rem;
+                min-height: 400px;
+            }
+            
+            .card-title {
+                font-size: 1.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .cards-grid {
+                gap: 1.5rem;
+            }
+            
+            .hero h2 {
+                font-size: 2rem;
+            }
+            
+            .cta-button {
+                padding: 1rem 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background Particles -->
+    <div class="particles" id="particles"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-spa"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>YogaFlow AI</h1>
+                    <p>Premium Yoga Correction System</p>
+                </div>
+            </div>
+            <nav class="nav-links">
+              
+            </nav>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <h2>AI-Powered Yoga Perfection</h2>
+            <p>Transform your practice with advanced pose detection and personalized feedback. Our research-based system combines computer vision with therapeutic principles for optimal alignment.</p>
+        </section>
+
+        <!-- Feature Cards -->
+        <div class="cards-grid">
+            <!-- Card 1: Yoga Correction Model -->
+            <div class="feature-card" onclick="navigateToCorrection()">
+                <div>
+                    <div class="card-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3 class="card-title">Real-Time Pose Detection</h3>
+                    <p class="card-description">
+                        YOLO-powered AI that analyzes your yoga poses in real-time with high-speed pose classification.        </p>
+                    <ul class="features-list">
+                        <li><i class="fas fa-check-circle"></i> Live skeleton visualization</li>
+                        <li><i class="fas fa-check-circle"></i> Angle measurement & alignment</li>
+                        <li><i class="fas fa-check-circle"></i> 100+ supported yoga poses</li>
+                        <li><i class="fas fa-check-circle"></i> Research-grade accuracy</li>
+                    </ul>
+                </div>
+                <button class="cta-button">
+                    Launch Detection Model <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <!-- Card 2: Yoga Feedback System -->
+            <div class="feature-card" onclick="navigateToFeedback()">
+                <div>
+                    <div class="card-icon">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <h3 class="card-title">Personalized Feedback System</h3>
+                    <p class="card-description">
+                        Get detailed, personalized feedback on your form, alignment, and progress with therapeutic insights.
+                    </p>
+                    <ul class="features-list">
+                        <li><i class="fas fa-check-circle"></i> Step-by-step corrections</li>
+                        <li><i class="fas fa-check-circle"></i> Progress tracking & analytics</li>
+                        <li><i class="fas fa-check-circle"></i> Wellness-focused guidance</li>
+                        <li><i class="fas fa-check-circle"></i> Export session reports</li>
+                    </ul>
+                </div>
+                <button class="cta-button">
+                    Open Feedback System <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p class="footer-text">© 2024 YogaFlow AI Research Project. Combining AI with therapeutic yoga practice.</p>
+            <p class="footer-text" style="margin-top: 0.5rem;">For research and wellness purposes only.</p>
+        </footer>
+    </div>
+    <script type="module" src="feedback.js"></script>
+
+
+    <script>
+
+
+        // Create animated background particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 30;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                // Random size and position
+                const size = Math.random() * 100 + 20;
+                const posX = Math.random() * 100;
+                const posY = Math.random() * 100;
+                
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${posX}%`;
+                particle.style.top = `${posY}%`;
+                particle.style.opacity = Math.random() * 0.08 + 0.02;
+                
+                // Add floating animation
+                particle.style.animation = `float ${Math.random() * 10 + 10}s infinite ease-in-out`;
+                particle.style.animationDelay = `${Math.random() * 5}s`;
+                
+                particlesContainer.appendChild(particle);
+            }
+            
+            // Add floating animation keyframes
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes float {
+                    0%, 100% { transform: translateY(0) rotate(0deg); }
+                    50% { transform: translateY(-20px) rotate(180deg); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Navigation functions
+        function navigateToCorrection() {
+            // In a real app, this would navigate to the correction screen
+           
+            window.location.href = "classify.html"; // Replace with actual URL
+        }
+
+        function navigateToFeedback() {
+            // In a real app, this would navigate to the feedback screen
+            alert("Navigating to Personalized Feedback System...");
+            window.location.href = "feedback.html"; // Replace with actual URL
+        }
+
+        // Add hover effect to cards
+        document.querySelectorAll('.feature-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.querySelector('.cta-button').style.transform = 'translateY(-4px)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.querySelector('.cta-button').style.transform = 'translateY(0)';
+            });
+        });
+
+        // Add click handlers to CTA buttons
+        document.querySelectorAll('.cta-button').forEach((button, index) => {
+            button.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (index === 0) {
+                    navigateToCorrection();
+                } else {
+                    navigateToFeedback();
+                }
+            });
+        });
+
+        // Initialize particles on load
+        window.addEventListener('load', createParticles);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YogaFlow AI - Pose Feedback & Correction</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+        background: linear-gradient(135deg, #590202 0%, #400101 100%);
+        min-height: 100vh;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .app-container {
+        background: #F2F0D8;
+        width: 100%;
+        max-width: 1400px;
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(89, 2, 2, 0.3);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 95vh;
+    }
+
+    /* HEADER */
+    .header {
+        background: linear-gradient(to right, #590202, #400101);
+        color: #F2F0D8;
+        padding: 20px 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .logo i {
+        font-size: 32px;
+        color: #BF9004;
+    }
+
+    .logo h1 {
+        font-size: 24px;
+        font-weight: 700;
+    }
+
+    .logo span {
+        color: #BF9004;
+    }
+
+    .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(242, 240, 216, 0.15);
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-size: 14px;
+    }
+
+    .status-dot {
+        width: 10px;
+        height: 10px;
+        background: #BF9004;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+
+    /* MAIN CONTENT */
+    .main-content {
+        display: flex;
+        flex: 1;
+        padding: 20px;
+        gap: 20px;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    /* LEFT PANEL - CAMERA (60% width) */
+    .camera-panel {
+        flex: 3;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        min-height: 0;
+    }
+
+    .camera-container {
+        background: #1A1200;
+        border-radius: 16px;
+        overflow: hidden;
+        position: relative;
+        flex: 1;
+        min-height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #A69485;
+    }
+
+    .camera-placeholder {
+        color: #A69485;
+        font-size: 16px;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .camera-controls {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-shrink: 0;
+        padding: 10px 0;
+    }
+
+    .control-btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 15px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        flex: 1;
+        max-width: 200px;
+    }
+
+    .primary-btn {
+        background: linear-gradient(to right, #BF9004, #A67C00);
+        color: white;
+    }
+
+    .primary-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(191, 144, 4, 0.4);
+    }
+
+    .secondary-btn {
+        background: #E8E2D0;
+        color: #590202;
+        border: 1px solid #A69485;
+    }
+
+    .secondary-btn:hover {
+        background: #D9C39A;
+    }
+
+    .accent-btn {
+        background: linear-gradient(135deg, #590202, #400101) !important;
+        border: none !important;
+        color: #F2F0D8 !important;
+    }
+
+    .accent-btn:hover {
+        background: linear-gradient(135deg, #400101, #300001) !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(89, 2, 2, 0.3);
+    }
+
+    /* RIGHT PANEL - FEEDBACK (40% width) */
+    .feedback-panel {
+        flex: 2;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        min-height: 0;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+
+    .feedback-panel::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .feedback-panel::-webkit-scrollbar-track {
+        background: #E8E2D0;
+        border-radius: 10px;
+    }
+
+    .feedback-panel::-webkit-scrollbar-thumb {
+        background: #A69485;
+        border-radius: 10px;
+    }
+
+    .feedback-panel::-webkit-scrollbar-thumb:hover {
+        background: #8C7A6D;
+    }
+
+    .card {
+        background: #D9C39A;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(89, 2, 2, 0.1);
+        flex-shrink: 0;
+        border: 1px solid #A69485;
+    }
+
+    .card-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+        color: #590202;
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .card-title i {
+        color: #590202;
+        font-size: 20px;
+    }
+
+    /* POSE SELECTOR */
+    .pose-selector {
+        width: 100%;
+        padding: 14px;
+        border: 2px solid #A69485;
+        border-radius: 10px;
+        font-size: 15px;
+        background: #F2F0D8;
+        color: #590202;
+        outline: none;
+        transition: border 0.3s;
+        cursor: pointer;
+    }
+
+    .pose-selector:focus {
+        border-color: #BF9004;
+    }
+
+    /* POSE SCORE */
+    .pose-score-container {
+        text-align: center;
+    }
+
+    .pose-score {
+        font-size: 64px;
+        font-weight: 800;
+        color: #590202;
+        margin: 10px 0;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .score-label {
+        color: #590202;
+        font-size: 14px;
+        opacity: 0.8;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .score-ring {
+        width: 160px;
+        height: 160px;
+        margin: 20px auto;
+        position: relative;
+    }
+
+    .score-ring-circle {
+        width: 100%;
+        height: 100%;
+        border: 8px solid #A69485;
+        border-radius: 50%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .score-ring-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 8px solid transparent;
+        border-radius: 50%;
+        border-top-color: #BF9004;
+        border-right-color: #BF9004;
+        transform: rotate(45deg);
+        transition: transform 1s ease;
+    }
+
+    /* FEEDBACK ITEMS */
+    .feedback-items {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .feedback-item {
+        background: #F2F0D8;
+        padding: 12px 15px;
+        border-radius: 10px;
+        border-left: 4px solid #A69485;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .feedback-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(89, 2, 2, 0.1);
+    }
+
+    .feedback-item.correct {
+        border-left-color: #2E7D32;
+        background: #E8F5E9;
+    }
+
+    .feedback-item.incorrect {
+        border-left-color: #C62828;
+        background: #FFEBEE;
+    }
+
+    .feedback-item.needs-improvement {
+        border-left-color: #BF9004;
+        background: #FFF3E0;
+    }
+
+    .feedback-icon {
+        font-size: 18px;
+        margin-top: 2px;
+        flex-shrink: 0;
+    }
+
+    .feedback-item.correct .feedback-icon {
+        color: #2E7D32;
+    }
+
+    .feedback-item.incorrect .feedback-icon {
+        color: #C62828;
+    }
+
+    .feedback-item.needs-improvement .feedback-icon {
+        color: #BF9004;
+    }
+
+    .feedback-text {
+        color: #590202;
+        font-size: 14px;
+        line-height: 1.4;
+        flex: 1;
+    }
+
+    /* POSE DETAILS */
+    .pose-details-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-top: 15px;
+    }
+
+    .detail-box {
+        background: #F2F0D8;
+        padding: 12px;
+        border-radius: 10px;
+        text-align: center;
+        border: 1px solid #A69485;
+    }
+
+    .detail-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: #590202;
+        margin-bottom: 4px;
+    }
+
+    .detail-label {
+        font-size: 11px;
+        color: #590202;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        opacity: 0.7;
+    }
+
+    /* TIPS SECTION */
+    .tips-list {
+        list-style: none;
+        padding: 0;
+        margin-top: 10px;
+    }
+
+    .tips-list li {
+        padding: 8px 0;
+        color: #590202;
+        font-size: 13px;
+        border-bottom: 1px dashed #A69485;
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .tips-list li:last-child {
+        border-bottom: none;
+    }
+
+    .tips-list li i {
+        color: #BF9004;
+        font-size: 12px;
+        margin-top: 3px;
+        flex-shrink: 0;
+    }
+
+    /* PROGRESS TRACKER */
+    .progress-tracker {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .progress-label {
+        color: #590202;
+        font-size: 13px;
+        min-width: 100px;
+    }
+
+    .progress-bar {
+        flex: 1;
+        height: 6px;
+        background: #A69485;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(to right, #BF9004, #A67C00);
+        border-radius: 3px;
+        width: 0%;
+        transition: width 1s ease;
+    }
+
+    /* FOOTER */
+    .footer {
+        background: #D9C39A;
+        padding: 15px 40px;
+        text-align: center;
+        color: #590202;
+        font-size: 13px;
+        border-top: 1px solid #A69485;
+        flex-shrink: 0;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 1200px) {
+        .app-container {
+            height: auto;
+            max-height: 95vh;
+        }
+        
+        .pose-score {
+            font-size: 56px;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .main-content {
+            flex-direction: column;
+            height: auto;
+        }
+        
+        .camera-container {
+            min-height: 400px;
+        }
+        
+        .feedback-panel {
+            max-height: 400px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .header {
+            flex-direction: column;
+            gap: 12px;
+            text-align: center;
+            padding: 15px 20px;
+        }
+        
+        .camera-controls {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .control-btn {
+            max-width: 100%;
+            width: 100%;
+        }
+        
+        .pose-details-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* SERVER CONNECTION OVERLAY */
+    #serverConnectionOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(89, 2, 2, 0.95);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        flex-direction: column;
+        color: #F2F0D8;
+        text-align: center;
+        padding: 30px;
+    }
+    
+    #serverConnectionOverlay i {
+        font-size: 64px;
+        color: #BF9004;
+        margin-bottom: 20px;
+    }
+    
+    #serverConnectionOverlay h2 {
+        font-size: 28px;
+        margin-bottom: 15px;
+        color: #F2F0D8;
+    }
+    
+    #serverConnectionOverlay p {
+        font-size: 16px;
+        margin-bottom: 25px;
+        max-width: 500px;
+        line-height: 1.5;
+        color: #D9C39A;
+    }
+    
+    #connectServerBtn {
+        background: linear-gradient(to right, #BF9004, #A67C00);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        font-size: 18px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.3s;
+    }
+    
+    #connectServerBtn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 10px 25px rgba(191, 144, 4, 0.4);
+    }
+
+    /* NOTIFICATIONS */
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 10px;
+        color: #590202;
+        font-weight: 600;
+        z-index: 1000;
+        box-shadow: 0 5px 15px rgba(89, 2, 2, 0.2);
+        animation: slideIn 0.3s ease;
+        background: #D9C39A;
+        border: 1px solid #A69485;
+    }
+    
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+
+    /* DEBUG PANEL */
+    #debugPanel {
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        background: rgba(89, 2, 2, 0.9);
+        color: #F2F0D8;
+        padding: 12px;
+        border-radius: 10px;
+        font-size: 12px;
+        max-width: 300px;
+        z-index: 1000;
+        border: 2px solid #BF9004;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    }
+    
+    #debugPanel h4 {
+        margin: 0 0 8px 0;
+        color: #BF9004;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    #debugInfo {
+        margin-bottom: 8px;
+        line-height: 1.4;
+        color: #F2F0D8;
+    }
+    
+    .debug-status {
+        display: flex;
+        justify-content: space-between;
+        margin: 4px 0;
+        font-size: 11px;
+        color: #F2F0D8;
+    }
+    
+    .debug-good {
+        color: #BF9004;
+    }
+    
+    .debug-bad {
+        color: #FF6B6B;
+    }
+    
+    .debug-warning {
+        color: #FFD166;
+    }
+</style>
+</head>
+<body>
+    <!-- SERVER CONNECTION OVERLAY -->
+    <div id="serverConnectionOverlay" style="display: flex;">
+        <i class="fas fa-server"></i>
+        <h2>Connect to YogaFlow Server</h2>
+        <p>YogaFlow AI uses Flask server for pose analysis. Make sure Flask app is running on port 5000.</p>
+        <p style="color: #D9C39A; font-size: 14px; margin-top: -10px;">Click "Connect to Server" below to start.</p>
+        <button id="connectServerBtn" onclick="connectToServer()">
+            <i class="fas fa-plug"></i> Connect to Server
+        </button>
+        <p style="margin-top: 20px; font-size: 12px; color: #A69485;">
+            <i class="fas fa-info-circle"></i> Server: http://localhost:5000
+        </p>
+    </div>
+
+    <div class="app-container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-spa"></i>
+                <h1>Yoga<span>Flow</span> AI - Pose Feedback</h1>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span id="connectionStatus">Starting up...</span>
+            </div>
+        </div>
+
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- LEFT PANEL - CAMERA -->
+            <div class="camera-panel">
+                <div class="camera-container" id="cameraContainer">
+                    <div class="camera-placeholder" id="cameraPlaceholder">
+                        <i class="fas fa-video fa-3x" style="margin-bottom: 15px;"></i>
+                        <p>Camera feed will appear here</p>
+                        <p style="font-size: 14px; margin-top: 10px;">Waiting for server connection...</p>
+                    </div>
+                </div>
+                
+                <div class="camera-controls">
+                    <button class="control-btn primary-btn" onclick="startFeedbackSession()" id="startBtn">
+                        <i class="fas fa-play"></i> Start Feedback Session
+                    </button>
+                    <button class="control-btn secondary-btn" onclick="toggleLandmarks()" id="landmarksBtn">
+                        <i class="fas fa-ruler-combined"></i> Toggle Landmarks
+                    </button>
+                    <button class="control-btn accent-btn" onclick="captureScreenshot()" id="screenshotBtn">
+                        <i class="fas fa-camera-retro"></i> Capture Pose
+                    </button>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL - FEEDBACK -->
+            <div class="feedback-panel">
+                <!-- POSE SELECTION -->
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fas fa-list-check"></i>
+                        <span>Select Yoga Pose</span>
+                    </div>
+                    <select class="pose-selector" id="posesDropdown" onchange="changePose(this.value)">
+                        <option value="tadasana">Tadasana (Mountain Pose)</option>
+                        <option value="vriksasana">Vriksasana (Tree Pose)</option>
+                        <option value="padahastasana">Padahastasana (Hand to Foot)</option>
+                        <option value="ardha_chakrasana">Ardha Chakrasana (Half Wheel)</option>
+                        <option value="trikonasana">Trikonasana (Triangle Pose)</option>
+                        <option value="bhadrasana">Bhadrasana (Gracious Pose)</option>
+                        <option value="vajrasana">Vajrasana (Thunderbolt Pose)</option>
+                        <option value="ustrasana">Ustrasana (Camel Pose)</option>
+                        <option value="sasakasana">Sasakasana (Rabbit Pose)</option>
+                    </select>
+                    <div style="margin-top: 10px; font-size: 12px; color: #590202; opacity: 0.7;">
+                        <i class="fas fa-info-circle"></i> Select a pose to receive specific feedback
+                    </div>
+                </div>
+
+                <!-- POSE SCORE -->
+                <div class="card pose-score-container">
+                    <div class="card-title">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Pose Accuracy Score</span>
+                    </div>
+                    <div class="score-ring">
+                        <div class="score-ring-circle">
+                            <div class="score-ring-fill" id="scoreRingFill"></div>
+                        </div>
+                    </div>
+                    <div class="pose-score" id="poseScore">0%</div>
+                    <div class="score-label">Accuracy Level</div>
+                </div>
+
+                <!-- LIVE FEEDBACK -->
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fas fa-comment-medical"></i>
+                        <span>Live Feedback & Corrections</span>
+                    </div>
+                    <div class="feedback-items" id="feedbackItems">
+                        <div class="feedback-item">
+                            <div class="feedback-icon">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <div class="feedback-text">
+                                Stand in the frame to begin analysis...
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-tracker">
+                        <div class="progress-label">Improvement Progress</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div id="progressPercent" style="color: #590202; font-size: 12px; min-width: 40px;">0%</div>
+                    </div>
+                </div>
+
+                <!-- POSE DETAILS -->
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fas fa-clipboard-check"></i>
+                        <span>Pose Details</span>
+                    </div>
+                    <div class="pose-details-grid">
+                        <div class="detail-box">
+                            <div class="detail-value" id="detectionTime">0s</div>
+                            <div class="detail-label">Detection Time</div>
+                        </div>
+                        <div class="detail-box">
+                            <div class="detail-value" id="feedbackCount">0</div>
+                            <div class="detail-label">Feedback Items</div>
+                        </div>
+                        <div class="detail-box">
+                            <div class="detail-value" id="correctItems">0</div>
+                            <div class="detail-label">Correct</div>
+                        </div>
+                        <div class="detail-box">
+                            <div class="detail-value" id="sessionTime">0s</div>
+                            <div class="detail-label">Session Time</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- IMPROVEMENT TIPS -->
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fas fa-lightbulb"></i>
+                        <span>Improvement Tips</span>
+                    </div>
+                    <ul class="tips-list" id="tipsList">
+                        <li><i class="fas fa-arrow-right"></i> Ensure good lighting for better detection</li>
+                        <li><i class="fas fa-arrow-right"></i> Stand at a distance where full body is visible</li>
+                        <li><i class="fas fa-arrow-right"></i> Wear fitted clothing for accurate landmark detection</li>
+                        <li><i class="fas fa-arrow-right"></i> Hold each pose for 3-5 seconds for analysis</li>
+                        <li><i class="fas fa-arrow-right"></i> Focus on breathing while holding poses</li>
+                    </ul>
+                </div>
+
+                <!-- HISTORY -->
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fas fa-history"></i>
+                        <span>Session History</span>
+                    </div>
+                    <div style="text-align: center; color: #590202; opacity: 0.7; font-size: 13px; padding: 10px;">
+                        <i class="fas fa-chart-bar"></i> Your progress will appear here
+                        <div style="margin-top: 10px; font-size: 11px;">
+                            <div id="poseHistory"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            <p><i class="fas fa-heart" style="color: #590202;"></i> YogaFlow AI • Real-time Pose Feedback & Correction • Advanced Biomechanical Analysis</p>
+        </div>
+    </div>
+
+    <!-- DEBUG PANEL -->
+    <div id="debugPanel">
+        <h4><i class="fas fa-bug"></i> Feedback System Monitor</h4>
+        <div id="debugInfo">Initializing feedback system...</div>
+        <div class="debug-status">
+            <span>Server:</span>
+            <span id="debugServer" class="debug-warning">Disconnected</span>
+        </div>
+        <div class="debug-status">
+            <span>Analysis:</span>
+            <span id="debugAnalysis" class="debug-warning">Idle</span>
+        </div>
+        <div class="debug-status">
+            <span>Current Pose:</span>
+            <span id="debugPose">Tadasana</span>
+        </div>
+        <div class="debug-status">
+            <span>Frame Rate:</span>
+            <span id="debugFPS">0</span>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <script type="module" src="feedback.js"></script>
+    <script>
+        // Global state
+        window.sessionActive = false;
+        window.sessionStartTime = null;
+        window.serverConnected = false;
+        window.showLandmarks = true;
+        window.currentPose = 'tadasana';
+        window.poseHistory = [];
+
+        // Server connection handler
+        async function connectToServer() {
+    console.log("🔌 Connecting to Flask server...");
+    
+    updateConnectionStatus('connecting');
+    showNotification("Connecting to Flask server...", "info");
+    
+    // Check if server is reachable
+    try {
+        const response = await fetch('http://localhost:5000/api/health');
+        if (response.ok) {
+            document.getElementById('serverConnectionOverlay').style.display = 'none';
+            
+            // Initialize feedback system
+            setTimeout(() => {
+                if (window.setupFeedbackSystem && typeof window.setupFeedbackSystem === 'function') {
+                    console.log("🎬 Starting feedback system...");
+                    window.setupFeedbackSystem();
+                    window.serverConnected = true;
+                    updateConnectionStatus('connected');
+                    showNotification("Successfully connected to server!", "success");
+                }
+            }, 1000);
+        }
+    } catch (error) {
+        showNotification("Cannot connect to server. Make sure Flask app is running!", "error");
+        updateConnectionStatus('disconnected');
+        document.getElementById('serverConnectionOverlay').style.display = 'flex';
+    }
+}
+
+        function updateConnectionStatus(status) {
+    const statusElement = document.getElementById('connectionStatus');
+    const dotElement = document.querySelector('.status-dot');
+    
+    if (status === 'connected') {
+        statusElement.textContent = "✅ Server Connected";
+        dotElement.style.background = "#2E7D32";
+        dotElement.style.animation = "pulse 1s infinite";
+    } else if (status === 'connecting') {
+        statusElement.textContent = "🔄 Connecting...";
+        dotElement.style.background = "#BF9004";
+        dotElement.style.animation = "pulse 0.5s infinite";
+    } else {
+        statusElement.textContent = "❌ Disconnected";
+        dotElement.style.background = "#C62828";
+        dotElement.style.animation = "none";
+    }
+}
+        // Session control
+        function startFeedbackSession() {
+            if (!window.serverConnected) {
+                showNotification("Please connect to server first!", "error");
+                document.getElementById('serverConnectionOverlay').style.display = 'flex';
+                return;
+            }
+            
+            if (!window.sessionActive) {
+                window.sessionActive = true;
+                window.sessionStartTime = Date.now();
+                window.poseHistory = [];
+                
+                document.getElementById('connectionStatus').textContent = "🎯 Feedback Active";
+                document.querySelector('.status-dot').style.background = "#BF9004";
+                document.querySelector('.status-dot').style.animation = "pulse 0.8s infinite";
+                
+                document.getElementById('startBtn').innerHTML = '<i class="fas fa-pause"></i> Pause Feedback';
+                document.getElementById('startBtn').onclick = pauseFeedbackSession;
+                
+                updateDebugInfo('analysis', 'active', 'Feedback session started');
+                showNotification("Feedback session started! Hold your pose for analysis.", "success");
+                
+                console.log("▶️ Feedback session STARTED");
+                updateSessionTimer();
+                
+                if (window.startFeedbackAnalysis) {
+                    window.startFeedbackAnalysis();
+                }
+            }
+        }
+
+        function pauseFeedbackSession() {
+            if (window.sessionActive) {
+                window.sessionActive = false;
+                
+                document.getElementById('connectionStatus').textContent = "⏸️ Feedback Paused";
+                document.querySelector('.status-dot').style.background = "#A69485";
+                document.querySelector('.status-dot').style.animation = "none";
+                
+                document.getElementById('startBtn').innerHTML = '<i class="fas fa-play"></i> Resume Feedback';
+                document.getElementById('startBtn').onclick = startFeedbackSession;
+                
+                updateDebugInfo('analysis', 'paused', 'Feedback paused');
+                
+                if (window.stopFeedbackAnalysis) {
+                    window.stopFeedbackAnalysis();
+                }
+            }
+        }
+
+        function toggleLandmarks() {
+            if (!window.serverConnected) {
+                showNotification("Please connect to server first!", "error");
+                return;
+            }
+            
+            window.showLandmarks = !window.showLandmarks;
+            const button = document.getElementById('landmarksBtn');
+            
+            if (window.showLandmarks) {
+                button.innerHTML = '<i class="fas fa-ruler-combined"></i> Hide Landmarks';
+                button.classList.remove('secondary-btn');
+                button.classList.add('accent-btn');
+                showNotification("Landmarks visible", "info");
+            } else {
+                button.innerHTML = '<i class="fas fa-ruler-combined"></i> Show Landmarks';
+                button.classList.remove('accent-btn');
+                button.classList.add('secondary-btn');
+                showNotification("Landmarks hidden", "info");
+            }
+            
+            if (window.toggleLandmarksDisplay) {
+                window.toggleLandmarksDisplay(window.showLandmarks);
+            }
+        }
+
+        function changePose(poseId) {
+            if (!window.serverConnected) {
+                showNotification("Please connect to server first!", "error");
+                return;
+            }
+            
+            window.currentPose = poseId;
+            const poseName = document.getElementById('posesDropdown').options[document.getElementById('posesDropdown').selectedIndex].text;
+            
+            updateDebugInfo('pose', 'changed', `Analyzing: ${poseName}`);
+            showNotification(`Now analyzing: ${poseName}`, "info");
+            
+            if (window.changePoseAnalysis && window.sessionActive) {
+                window.changePoseAnalysis(poseId);
+            }
+            
+            // Add to history
+            const historyEntry = {
+                pose: poseName,
+                time: new Date().toLocaleTimeString(),
+                score: 0
+            };
+            window.poseHistory.unshift(historyEntry);
+            
+            // Update history display
+            updatePoseHistory();
+        }
+
+        function captureScreenshot() {
+            if (!window.serverConnected) {
+                showNotification("Please connect to server first!", "error");
+                return;
+            }
+            
+            if (!window.sessionActive) {
+                showNotification("Start a session first!", "error");
+                return;
+            }
+            
+            showNotification("Pose captured! (Coming soon: Save to gallery)", "info");
+            
+            if (window.captureCurrentPose) {
+                window.captureCurrentPose();
+            }
+        }
+
+        // Update functions
+        function updateSessionTimer() {
+            if (window.sessionStartTime) {
+                const seconds = Math.floor((Date.now() - window.sessionStartTime) / 1000);
+                document.getElementById('sessionTime').textContent = seconds + 's';
+                
+                if (window.sessionActive) {
+                    setTimeout(updateSessionTimer, 1000);
+                }
+            }
+        }
+
+        function updatePoseHistory() {
+            const historyDiv = document.getElementById('poseHistory');
+            if (window.poseHistory.length === 0) {
+                historyDiv.innerHTML = "No poses analyzed yet";
+                return;
+            }
+            
+            let html = '';
+            window.poseHistory.slice(0, 3).forEach(entry => {
+                html += `<div style="margin-bottom: 5px;">${entry.time} - ${entry.pose}: ${entry.score}%</div>`;
+            });
+            
+            if (window.poseHistory.length > 3) {
+                html += `<div style="font-style: italic;">+${window.poseHistory.length - 3} more...</div>`;
+            }
+            
+            historyDiv.innerHTML = html;
+        }
+
+        // UI update functions for feedback.js to call
+        window.updateFeedbackUI = function(data) {
+            if (!window.sessionActive) return;
+            
+            // Update score
+            const score = Math.round(data.score);
+            document.getElementById('poseScore').textContent = score + '%';
+            
+            // Update score ring
+            const rotation = (score / 100) * 360;
+            document.getElementById('scoreRingFill').style.transform = `rotate(${rotation}deg)`;
+            
+            // Update progress bar
+            document.getElementById('progressFill').style.width = score + '%';
+            document.getElementById('progressPercent').textContent = score + '%';
+            
+            // Update feedback items
+            const feedbackItemsDiv = document.getElementById('feedbackItems');
+            feedbackItemsDiv.innerHTML = '';
+            
+            let correctCount = 0;
+            data.feedback.forEach((fb, index) => {
+                const item = document.createElement('div');
+                item.className = 'feedback-item';
+                
+                let icon = 'info-circle';
+                let className = '';
+                
+                if (fb.includes('✓')) {
+                    icon = 'check-circle';
+                    className = 'correct';
+                    correctCount++;
+                } else if (fb.toLowerCase().includes('not') || fb.toLowerCase().includes('incorrect')) {
+                    icon = 'times-circle';
+                    className = 'incorrect';
+                } else {
+                    icon = 'exclamation-triangle';
+                    className = 'needs-improvement';
+                }
+                
+                item.classList.add(className);
+                item.innerHTML = `
+                    <div class="feedback-icon">
+                        <i class="fas fa-${icon}"></i>
+                    </div>
+                    <div class="feedback-text">
+                        ${fb}
+                    </div>
+                `;
+                
+                // Add animation delay
+                item.style.animationDelay = `${index * 0.1}s`;
+                item.style.opacity = '0';
+                item.style.animation = 'fadeIn 0.5s forwards';
+                
+                feedbackItemsDiv.appendChild(item);
+            });
+            
+            // Update counters
+            document.getElementById('feedbackCount').textContent = data.feedback.length;
+            document.getElementById('correctItems').textContent = correctCount;
+            
+            // Add detection time
+            const now = new Date();
+            document.getElementById('detectionTime').textContent = now.getSeconds() + 's';
+            
+            // Update current history entry if exists
+            if (window.poseHistory.length > 0) {
+                window.poseHistory[0].score = score;
+                updatePoseHistory();
+            }
+            
+            // Color code score
+            const scoreElement = document.getElementById('poseScore');
+            if (score >= 85) {
+                scoreElement.style.color = '#2E7D32';
+            } else if (score >= 65) {
+                scoreElement.style.color = '#BF9004';
+            } else {
+                scoreElement.style.color = '#C62828';
+            }
+        };
+
+        // Debug and notification functions
+        function updateDebugInfo(type, status, message) {
+            const element = document.getElementById('debug' + type.charAt(0).toUpperCase() + type.slice(1));
+            if (element) {
+                element.textContent = message || status;
+                element.className = status === 'granted' || status === 'active' || status === 'connected' 
+                    ? 'debug-good' 
+                    : status === 'denied' || status === 'error' 
+                    ? 'debug-bad' 
+                    : 'debug-warning';
+            }
+            
+            document.getElementById('debugInfo').textContent = message || '';
+        }
+
+        function showNotification(message, type) {
+            const existing = document.querySelector('.notification');
+            if (existing) existing.remove();
+            
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            
+            let className, icon;
+            if (type === 'success') {
+                className = 'success';
+                icon = 'check-circle';
+            } else if (type === 'error') {
+                className = 'error';
+                icon = 'exclamation-circle';
+            } else {
+                className = 'info';
+                icon = 'info-circle';
+            }
+            
+            notification.classList.add(className);
+            notification.innerHTML = `<i class="fas fa-${icon}"></i> ${message}`;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => notification.remove(), 300);
+                }
+            }, 3000);
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log("🚀 YogaFlow AI Feedback System Starting...");
+            
+            // Auto-show server connection overlay
+            setTimeout(() => {
+                document.getElementById('serverConnectionOverlay').style.display = 'flex';
+            }, 500);
+            
+            // Initialize pose history
+            updatePoseHistory();
+        });
+
+        // Make functions globally available
+        window.startFeedbackSession = startFeedbackSession;
+        window.pauseFeedbackSession = pauseFeedbackSession;
+        window.toggleLandmarks = toggleLandmarks;
+        window.changePose = changePose;
+        window.captureScreenshot = captureScreenshot;
+        window.showNotification = showNotification;
+        window.updateDebugInfo = updateDebugInfo;
+        window.connectToServer = connectToServer;
+    </script>
+</body>
+</html>

@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YogaFlow AI - Pose Detection</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .accent-btn {
+        background: linear-gradient(135deg, #BF9004, #A67C00) !important;
+        border: none !important;
+        color: white !important;
+    }
+
+    .accent-btn:hover {
+        background: linear-gradient(135deg, #A67C00, #8C6B00) !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(191, 144, 4, 0.3);
+    }
+
+    body {
+        background: linear-gradient(135deg, #590202 0%, #400101 100%);
+        min-height: 100vh;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .app-container {
+        background: #F2F0D8;
+        width: 100%;
+        max-width: 1400px;
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(89, 2, 2, 0.3);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 95vh;
+    }
+
+    /* HEADER */
+    .header {
+        background: linear-gradient(to right, #590202, #400101);
+        color: white;
+        padding: 20px 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .logo i {
+        font-size: 32px;
+        color: #BF9004;
+    }
+
+    .logo h1 {
+        font-size: 24px;
+        font-weight: 700;
+    }
+
+    .logo span {
+        color: #BF9004;
+    }
+
+    .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-size: 14px;
+    }
+
+    .status-dot {
+        width: 10px;
+        height: 10px;
+        background: #BF9004;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+
+    /* MAIN CONTENT */
+    .main-content {
+        display: flex;
+        flex: 1;
+        padding: 20px;
+        gap: 20px;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    /* LEFT PANEL - CAMERA (60% width) */
+    .camera-panel {
+        flex: 3;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        min-height: 0;
+    }
+
+    .camera-container {
+        background: #1A1200;
+        border-radius: 16px;
+        overflow: hidden;
+        position: relative;
+        flex: 1;
+        min-height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #A69485;
+    }
+
+    .camera-placeholder {
+        color: #A69485;
+        font-size: 16px;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .camera-controls {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-shrink: 0;
+        padding: 10px 0;
+    }
+
+    .control-btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 15px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        flex: 1;
+        max-width: 200px;
+    }
+
+    .primary-btn {
+        background: linear-gradient(to right, #BF9004, #A67C00);
+        color: white;
+    }
+
+    .primary-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(191, 144, 4, 0.4);
+    }
+
+    .secondary-btn {
+        background: #E8E2D0;
+        color: #590202;
+        border: 1px solid #A69485;
+    }
+
+    .secondary-btn:hover {
+        background: #D9C39A;
+    }
+
+    /* RIGHT PANEL - INFO (40% width) */
+    .info-panel {
+        flex: 2;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        min-height: 0;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+
+    .info-panel::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .info-panel::-webkit-scrollbar-track {
+        background: #E8E2D0;
+        border-radius: 10px;
+    }
+
+    .info-panel::-webkit-scrollbar-thumb {
+        background: #A69485;
+        border-radius: 10px;
+    }
+
+    .info-panel::-webkit-scrollbar-thumb:hover {
+        background: #8C7A6D;
+    }
+
+    .card {
+        background: #D9C39A;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(89, 2, 2, 0.1);
+        flex-shrink: 0;
+        border: 1px solid #A69485;
+    }
+
+    .card-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+        color: #590202;
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .card-title i {
+        color: #590202;
+        font-size: 20px;
+    }
+
+    /* POSE SELECTOR */
+    .pose-selector {
+        width: 100%;
+        padding: 14px;
+        border: 2px solid #A69485;
+        border-radius: 10px;
+        font-size: 15px;
+        background: #F2F0D8;
+        color: #590202;
+        outline: none;
+        transition: border 0.3s;
+        cursor: pointer;
+    }
+
+    .pose-selector:focus {
+        border-color: #BF9004;
+    }
+
+    /* DETECTION RESULTS */
+    .detection-results {
+        text-align: center;
+    }
+
+    .detected-pose {
+        font-size: 36px;
+        font-weight: 700;
+        color: #590202;
+        margin: 12px 0;
+        min-height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1.2;
+    }
+
+    .confidence-meter {
+        margin: 20px 0;
+    }
+
+    .confidence-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 6px;
+        color: #590202;
+        font-size: 13px;
+        opacity: 0.8;
+    }
+
+    .confidence-bar {
+        height: 10px;
+        background: #A69485;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+
+    .confidence-fill {
+        height: 100%;
+        background: linear-gradient(to right, #BF9004, #A67C00);
+        border-radius: 5px;
+        width: 0%;
+        transition: width 1s ease;
+    }
+
+    .confidence-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #590202;
+    }
+
+    /* MATCH FEEDBACK */
+    .match-feedback {
+        display: none;
+        padding: 12px;
+        border-radius: 10px;
+        margin-top: 15px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 16px;
+    }
+
+    .match-correct {
+        background: #E8F5E9;
+        color: #2E7D32;
+        border: 2px solid #BF9004;
+    }
+
+    .match-incorrect {
+        background: #FFEBEE;
+        color: #C62828;
+        border: 2px solid #590202;
+    }
+
+    /* POSE IMAGE */
+    .pose-image-container {
+        text-align: center;
+    }
+
+    .pose-image {
+        max-width: 100%;
+        max-height: 200px;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(89, 2, 2, 0.1);
+        display: none;
+        border: 2px solid #A69485;
+    }
+
+    /* STATS */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-top: 15px;
+    }
+
+    .stat-box {
+        background: #F2F0D8;
+        padding: 12px;
+        border-radius: 10px;
+        text-align: center;
+        border: 1px solid #A69485;
+    }
+
+    .stat-value {
+        font-size: 22px;
+        font-weight: 700;
+        color: #590202;
+        margin-bottom: 4px;
+    }
+
+    .stat-label {
+        font-size: 11px;
+        color: #590202;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        opacity: 0.7;
+    }
+
+    /* FOOTER */
+    .footer {
+        background: #D9C39A;
+        padding: 15px 40px;
+        text-align: center;
+        color: #590202;
+        font-size: 13px;
+        border-top: 1px solid #A69485;
+        flex-shrink: 0;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 1200px) {
+        .app-container {
+            height: auto;
+            max-height: 95vh;
+        }
+        
+        .detected-pose {
+            font-size: 30px;
+        }
+        
+        .confidence-value {
+            font-size: 24px;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .main-content {
+            flex-direction: column;
+            height: auto;
+        }
+        
+        .camera-container {
+            min-height: 400px;
+        }
+        
+        .info-panel {
+            max-height: 400px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .header {
+            flex-direction: column;
+            gap: 12px;
+            text-align: center;
+            padding: 15px 20px;
+        }
+        
+        .camera-controls {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .control-btn {
+            max-width: 100%;
+            width: 100%;
+        }
+        
+        .detected-pose {
+            font-size: 24px;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-height: 800px) {
+        .app-container {
+            height: 98vh;
+        }
+        
+        .card {
+            padding: 15px;
+        }
+        
+        .card-title {
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .detected-pose {
+            font-size: 28px;
+        }
+    }
+    
+    /* DEBUG PANEL */
+    #debugPanel {
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        background: rgba(89, 2, 2, 0.9);
+        color: #F2F0D8;
+        padding: 12px;
+        border-radius: 10px;
+        font-size: 12px;
+        max-width: 300px;
+        z-index: 1000;
+        border: 2px solid #BF9004;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    }
+    
+    #debugPanel h4 {
+        margin: 0 0 8px 0;
+        color: #BF9004;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    #debugInfo {
+        margin-bottom: 8px;
+        line-height: 1.4;
+        color: #F2F0D8;
+    }
+    
+    .debug-status {
+        display: flex;
+        justify-content: space-between;
+        margin: 4px 0;
+        font-size: 11px;
+        color: #F2F0D8;
+    }
+    
+    .debug-good {
+        color: #BF9004;
+    }
+    
+    .debug-bad {
+        color: #FF6B6B;
+    }
+    
+    .debug-warning {
+        color: #FFD166;
+    }
+    
+    /* CAMERA PERMISSION OVERLAY */
+    #cameraPermissionOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(89, 2, 2, 0.95);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        flex-direction: column;
+        color: #F2F0D8;
+        text-align: center;
+        padding: 30px;
+    }
+    
+    #cameraPermissionOverlay i {
+        font-size: 64px;
+        color: #BF9004;
+        margin-bottom: 20px;
+    }
+    
+    #cameraPermissionOverlay h2 {
+        font-size: 28px;
+        margin-bottom: 15px;
+        color: #F2F0D8;
+    }
+    
+    #cameraPermissionOverlay p {
+        font-size: 16px;
+        margin-bottom: 25px;
+        max-width: 500px;
+        line-height: 1.5;
+        color: #D9C39A;
+    }
+    
+    #allowCameraBtn {
+        background: linear-gradient(to right, #BF9004, #A67C00);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        font-size: 18px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.3s;
+    }
+    
+    #allowCameraBtn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 10px 25px rgba(191, 144, 4, 0.4);
+    }
+    
+    /* NOTIFICATIONS */
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 10px;
+        color: #590202;
+        font-weight: 600;
+        z-index: 1000;
+        box-shadow: 0 5px 15px rgba(89, 2, 2, 0.2);
+        animation: slideIn 0.3s ease;
+        background: #D9C39A;
+        border: 1px solid #A69485;
+    }
+    
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+
+    /* Drag and drop styles */
+    #uploadContainer {
+        border: 2px dashed #A69485;
+        border-radius: 10px;
+        padding: 15px;
+        transition: all 0.3s;
+        background: #F2F0D8;
+    }
+
+    #uploadContainer.drag-over {
+        border-color: #BF9004;
+        background-color: #E8E2D0;
+    }
+
+    .upload-dropzone {
+        text-align: center;
+        padding: 20px;
+    }
+
+    .upload-dropzone i {
+        font-size: 48px;
+        color: #A69485;
+        margin-bottom: 10px;
+    }
+
+    .upload-dropzone p {
+        color: #590202;
+        margin: 5px 0;
+    }
+    
+    /* Additional styles for consistency */
+    #uploadHelp {
+        color: #590202;
+        opacity: 0.7;
+    }
+    
+    #poseName {
+        color: #590202;
+        opacity: 0.7;
+    }
+    
+    .stat-box {
+        background: #F2F0D8;
+    }
+    
+    .match-correct {
+        background: #E8F5E9;
+        color: #2E7D32;
+        border: 2px solid #BF9004;
+    }
+    
+    .match-incorrect {
+        background: #FFEBEE;
+        color: #C62828;
+        border: 2px solid #590202;
+    }
+    
+    /* Update notification colors */
+    .notification.success {
+        background: linear-gradient(to right, #4CAF50, #8BC34A);
+        color: white;
+    }
+    
+    .notification.error {
+        background: linear-gradient(to right, #F44336, #E53935);
+        color: white;
+    }
+    
+    .notification.info {
+        background: linear-gradient(to right, #BF9004, #A67C00);
+        color: white;
+    }
+</style>
+</head>
+<body>
+    <!-- The rest of your HTML remains exactly the same -->
+    <button id="visualizationToggle" class="secondary-btn" onclick="toggleVisualizationMode()">
+        <i class="fas fa-projector"></i> Switch to Simple View
+    </button>
+    
+    <!-- CAMERA PERMISSION OVERLAY -->
+    <div id="cameraPermissionOverlay" style="display: flex;">
+        <i class="fas fa-video"></i>
+        <h2>Camera Access Required</h2>
+        <p>YogaFlow AI needs access to your camera to detect your yoga poses in real-time.</p>
+        <p style="color: #D9C39A; font-size: 14px; margin-top: -10px;">Click "Allow Camera" below, then click "Allow" in the browser's permission popup.</p>
+        <button id="allowCameraBtn" onclick="requestCameraAccess()">
+            <i class="fas fa-camera"></i> Allow Camera Access
+        </button>
+        <p style="margin-top: 20px; font-size: 12px; color: #A69485;">
+            <i class="fas fa-info-circle"></i> Your video is processed locally and never sent to any server
+        </p>
+    </div>
+
+    <div class="app-container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-spa"></i>
+                <h1>Yoga<span>Flow</span> AI</h1>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span id="connectionStatus">Starting up...</span>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- LEFT PANEL - CAMERA -->
+            <div class="camera-panel">
+                <div class="camera-container" id="cameraContainer">
+                    <div class="camera-placeholder" id="cameraPlaceholder">
+                        <i class="fas fa-video fa-3x" style="margin-bottom: 15px;"></i>
+                        <p>Camera feed will appear here</p>
+                        <p style="font-size: 14px; margin-top: 10px;">Waiting for camera access...</p>
+                    </div>
+                </div>
+                
+                <div class="camera-controls">
+                    <button class="control-btn primary-btn" onclick="startSession()" id="startBtn">
+                        <i class="fas fa-play"></i> Start Session
+                    </button>
+                    <button class="control-btn secondary-btn" onclick="endSession()" id="endBtn">
+                        <i class="fas fa-stop"></i> End Session
+                    </button>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL - INFO -->
+            <div class="info-panel">
+                <!-- POSE SELECTION -->
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fas fa-list-check"></i>
+                        <span>Select Target Pose</span>
+                    </div>
+                    <select class="pose-selector" id="posesDropdown">
+                        <option value="none">Loading poses from AI model...</option>
+                    </select>
+                </div>
+                
+                <!-- IMAGE UPLOAD CARD -->
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fas fa-upload"></i>
+                        <span>Upload & Analyze Image</span>
+                    </div>
+                    <div id="uploadContainer" style="text-align: center;">
+                        <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                        <button class="control-btn secondary-btn" onclick="document.getElementById('imageUpload').click()" 
+                                style="width: 100%; margin-bottom: 10px;">
+                            <i class="fas fa-file-upload"></i> Choose Image
+                        </button>
+                        <div id="uploadPreview" style="margin-top: 15px; display: none;">
+                            <img id="uploadedImage" alt="Uploaded preview" 
+                                 style="max-width: 100%; max-height: 150px; border-radius: 8px; border: 2px solid #A69485;">
+                            <div style="margin-top: 10px;">
+                                <button class="control-btn primary-btn" onclick="analyzeUploadedImage()" 
+                                        style="width: 100%; margin-bottom: 5px;">
+                                    <i class="fas fa-search"></i> Analyze This Image
+                                </button>
+                                <button class="control-btn secondary-btn" onclick="clearUploadedImage()" 
+                                        style="width: 100%;">
+                                    <i class="fas fa-times"></i> Clear
+                                </button>
+                            </div>
+                        </div>
+                        <p id="uploadHelp" style="font-size: 12px; color: #590202; margin-top: 10px;">
+                            <i class="fas fa-info-circle"></i> Upload a photo to check the yoga pose
+                        </p>
+                    </div>
+                </div>
+
+                <!-- DETECTION RESULTS -->
+                <div class="card detection-results">
+                    <div class="card-title">
+                        <i class="fas fa-brain"></i>
+                        <span>AI Detection Results</span>
+                    </div>
+                    
+                    <div class="detected-pose" id="detectedPose">
+                        Waiting for camera...
+                    </div>
+                    
+                    <div class="confidence-meter">
+                        <div class="confidence-label">
+                            <span>Confidence Level</span>
+                            <span id="confidencePercent">0%</span>
+                        </div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" id="confidenceFill"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="confidence-value" id="confidenceValue">
+                        0%
+                    </div>
+                    
+                    <div id="matchFeedback" class="match-feedback">
+                        <!-- Correct/Incorrect feedback appears here -->
+                    </div>
+                </div>
+
+                <!-- POSE IMAGE -->
+                <div class="card pose-image-container">
+                    <div class="card-title">
+                        <i class="fas fa-image"></i>
+                        <span>Pose Reference</span>
+                    </div>
+                    <img class="pose-image" id="poseImage" alt="Selected pose reference">
+                    <p id="poseName" style="margin-top: 10px; color: #590202; font-size: 14px;">Select a pose to see reference</p>
+                </div>
+
+                <!-- UPLOAD RESULTS CARD -->
+                <div class="card" id="uploadResultsCard" style="display: none;">
+                    <div class="card-title">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Image Analysis Results</span>
+                    </div>
+                    <div style="text-align: center;">
+                        <div class="detected-pose" id="uploadedPoseResult">
+                            Analyzing...
+                        </div>
+                        
+                        <div class="confidence-meter" style="margin: 20px 0;">
+                            <div class="confidence-label">
+                                <span>Confidence Level</span>
+                                <span id="uploadConfidencePercent">0%</span>
+                            </div>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" id="uploadConfidenceFill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="confidence-value" id="uploadConfidenceValue">
+                            0%
+                        </div>
+                        
+                        <div id="uploadMatchFeedback" class="match-feedback" style="margin-top: 15px;">
+                            <!-- Match feedback appears here -->
+                        </div>
+                        
+                        <div style="margin-top: 20px;">
+                            <div class="stat-box" style="display: inline-block; width: 45%; margin: 0 2%;">
+                                <div class="stat-value" id="uploadAnalysisTime">0s</div>
+                                <div class="stat-label">Analysis Time</div>
+                            </div>
+                            <div class="stat-box" style="display: inline-block; width: 45%; margin: 0 2%;">
+                                <div class="stat-value" id="uploadFileSize">0 KB</div>
+                                <div class="stat-label">File Size</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STATISTICS -->
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Session Statistics</span>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-value" id="statDetections">0</div>
+                            <div class="stat-label">Detections</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="statAccuracy">0%</div>
+                            <div class="stat-label">Accuracy</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="statMatches">0</div>
+                            <div class="stat-label">Matches</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="statTime">0s</div>
+                            <div class="stat-label">Duration</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            <p><i class="fas fa-heart" style="color: #590202;"></i> YogaFlow AI • Real-time Pose Detection with YOLO • 107 Poses Supported</p>
+        </div>
+    </div>
+
+    <!-- DEBUG PANEL -->
+    <div id="debugPanel">
+        <h4><i class="fas fa-bug"></i> System Monitor</h4>
+        <div id="debugInfo">Initializing system...</div>
+        <div class="debug-status">
+            <span>Backend:</span>
+            <span id="debugBackend" class="debug-warning">Checking...</span>
+        </div>
+        <div class="debug-status">
+            <span>Camera:</span>
+            <span id="debugCamera" class="debug-warning">Waiting...</span>
+        </div>
+        <div class="debug-status">
+            <span>Session:</span>
+            <span id="debugSession" class="debug-warning">Inactive</span>
+        </div>
+        <div class="debug-status">
+            <span>Detections:</span>
+            <span id="debugDetections">0</span>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <script src="classify.js"></script>
+    
+    <!-- Your existing JavaScript code remains exactly the same -->
+    <script>
+        // ===== GLOBAL STATE =====
+        window.sessionActive = false;
+        window.sessionStartTime = null;
+        window.detectionCount = 0;
+        window.matchCount = 0;
+        window.cameraGranted = false;
+        
+        // ===== CAMERA PERMISSION HANDLER =====
+        async function requestCameraAccess() {
+            console.log("📹 Requesting camera access...");
+            
+            try {
+                // Request camera
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        facingMode: "user"
+                    } 
+                });
+                
+                // Hide permission overlay
+                document.getElementById('cameraPermissionOverlay').style.display = 'none';
+                
+                // Update debug
+                updateDebugInfo('camera', 'granted', 'Camera access granted');
+                
+                // Store camera state
+                window.cameraGranted = true;
+                
+                // Show success notification
+                showNotification("Camera access granted! Starting AI model...", "success");
+                
+                // Initialize p5.js after camera is granted
+                setTimeout(() => {
+                    if (window.setup && typeof window.setup === 'function') {
+                        console.log("🎬 Starting p5.js setup...");
+                        // p5.js will call setup() automatically
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                console.error("❌ Camera error:", error);
+                updateDebugInfo('camera', 'denied', error.message);
+                
+                document.getElementById('cameraPermissionOverlay').innerHTML = `
+                    <i class="fas fa-video-slash" style="color:#590202;"></i>
+                    <h2>Camera Access Denied</h2>
+                    <p>Please allow camera access to use YogaFlow AI.</p>
+                    <p style="color:#A69485;">Error: ${error.message}</p>
+                    <button id="allowCameraBtn" onclick="location.reload()" style="margin-top:20px;">
+                        <i class="fas fa-redo"></i> Reload Page
+                    </button>
+                `;
+            }
+        }
+        
+        function addVisualizationStyles() {
+            const style = document.createElement('style');
+            style.textContent = `
+                .accent-btn {
+                    background: linear-gradient(135deg, #BF9004, #A67C00) !important;
+                    border: none !important;
+                    color: white !important;
+                }
+                
+                .accent-btn:hover {
+                    background: linear-gradient(135deg, #A67C00, #8C6B00) !important;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // ===== SESSION CONTROL =====
+        function startSession() {
+            if (!window.cameraGranted) {
+                showNotification("Please allow camera access first!", "error");
+                return;
+            }
+            
+            if (!window.sessionActive) {
+                window.sessionActive = true;
+                window.sessionStartTime = Date.now();
+                window.detectionCount = 0;
+                window.matchCount = 0;
+                
+                // Update UI
+                document.getElementById('connectionStatus').textContent = "🎯 Session Active";
+                document.querySelector('.status-dot').style.background = "#BF9004";
+                document.querySelector('.status-dot').style.animation = "pulse 0.8s infinite";
+                
+                // Update buttons
+                document.getElementById('startBtn').innerHTML = '<i class="fas fa-pause"></i> Pause Session';
+                document.getElementById('startBtn').onclick = pauseSession;
+                
+                // Update debug
+                updateDebugInfo('session', 'active', 'Session started');
+                showNotification("Session started! AI is detecting your poses.", "success");
+                
+                console.log("▶️ Session STARTED");
+                updateStats();
+                
+                // Tell classify.js
+                if (window.startYogaSession) {
+                    window.startYogaSession();
+                }
+            }
+        }
+        
+        function pauseSession() {
+            if (window.sessionActive) {
+                window.sessionActive = false;
+                
+                // Update UI
+                document.getElementById('connectionStatus').textContent = "⏸️ Session Paused";
+                document.querySelector('.status-dot').style.background = "#A69485";
+                document.querySelector('.status-dot').style.animation = "none";
+                
+                // Update buttons
+                document.getElementById('startBtn').innerHTML = '<i class="fas fa-play"></i> Resume Session';
+                document.getElementById('startBtn').onclick = startSession;
+                
+                // Update debug
+                updateDebugInfo('session', 'paused', 'Session paused');
+                
+                console.log("⏸️ Session PAUSED");
+                
+                // Tell classify.js
+                if (window.stopYogaSession) {
+                    window.stopYogaSession();
+                }
+            }
+        }
+        
+        function endSession() {
+            if (window.sessionStartTime) {
+                const duration = Math.floor((Date.now() - window.sessionStartTime) / 1000);
+                showNotification(`Session ended. ${window.detectionCount} detections in ${duration} seconds.`, "info");
+                
+                window.sessionActive = false;
+                window.sessionStartTime = null;
+                
+                // Reset UI
+                document.getElementById('connectionStatus').textContent = "Ready";
+                document.querySelector('.status-dot').style.background = "#BF9004";
+                document.getElementById('startBtn').innerHTML = '<i class="fas fa-play"></i> Start Session';
+                document.getElementById('startBtn').onclick = startSession;
+                
+                updateDebugInfo('session', 'ended', 'Session ended');
+                
+                console.log("⏹️ Session ENDED");
+            }
+        }
+        
+        // ===== STATISTICS =====
+        function updateStats() {
+            document.getElementById('statDetections').textContent = window.detectionCount;
+            
+            if (window.detectionCount > 0) {
+                const accuracy = Math.round((window.matchCount / window.detectionCount) * 100);
+                document.getElementById('statAccuracy').textContent = accuracy + '%';
+            }
+            
+            document.getElementById('statMatches').textContent = window.matchCount;
+            
+            if (window.sessionStartTime) {
+                const seconds = Math.floor((Date.now() - window.sessionStartTime) / 1000);
+                document.getElementById('statTime').textContent = seconds + 's';
+            }
+            
+            // Update debug panel
+            document.getElementById('debugDetections').textContent = window.detectionCount;
+        }
+        
+        // ===== NOTIFICATION SYSTEM =====
+        function showNotification(message, type) {
+            // Remove existing
+            const existing = document.querySelector('.notification');
+            if (existing) existing.remove();
+            
+            // Create notification
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            
+            let className, icon;
+            if (type === 'success') {
+                className = 'success';
+                icon = 'check-circle';
+            } else if (type === 'error') {
+                className = 'error';
+                icon = 'exclamation-circle';
+            } else {
+                className = 'info';
+                icon = 'info-circle';
+            }
+            
+            notification.classList.add(className);
+            notification.innerHTML = `<i class="fas fa-${icon}"></i> ${message}`;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remove
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => notification.remove(), 300);
+                }
+            }, 3000);
+        }
+        
+        function toggleVisualizationMode() {
+            window.simpleVisualization = !window.simpleVisualization;
+            const button = document.getElementById('visualizationBtn');
+            
+            if (!button) {
+                // Create the button if it doesn't exist
+                const landmarksBtn = document.getElementById('landmarksBtn');
+                if (landmarksBtn) {
+                    const newBtn = landmarksBtn.cloneNode(true);
+                    newBtn.id = 'visualizationBtn';
+                    newBtn.innerHTML = '<i class="fas fa-projector"></i> Switch Visualization';
+                    newBtn.onclick = toggleVisualizationMode;
+                    landmarksBtn.parentNode.insertBefore(newBtn, landmarksBtn.nextSibling);
+                }
+            } else {
+                if (window.simpleVisualization) {
+                    button.innerHTML = '<i class="fas fa-projector"></i> Simple Mode';
+                    button.classList.remove('secondary-btn');
+                    button.classList.add('accent-btn');
+                    window.showNotification("Switched to simple visualization", "info");
+                } else {
+                    button.innerHTML = '<i class="fas fa-projector"></i> Advanced Mode';
+                    button.classList.remove('accent-btn');
+                    button.classList.add('secondary-btn');
+                    window.showNotification("Switched to advanced visualization", "info");
+                }
+            }
+        }
+        
+        // ===== DEBUG SYSTEM =====
+        function updateDebugInfo(type, status, message) {
+            const element = document.getElementById('debug' + type.charAt(0).toUpperCase() + type.slice(1));
+            if (element) {
+                element.textContent = message || status;
+                element.className = status === 'granted' || status === 'active' || status === 'connected' 
+                    ? 'debug-good' 
+                    : status === 'denied' || status === 'error' 
+                    ? 'debug-bad' 
+                    : 'debug-warning';
+            }
+            
+            // Update main debug info
+            if (message) {
+                document.getElementById('debugInfo').textContent = message;
+            }
+        }
+        
+        // ===== GLOBAL FUNCTIONS FOR CLASSIFY.JS =====
+        window.updateDetectionUI = function(data) {
+            if (!window.sessionActive) return;
+            
+            window.detectionCount++;
+            
+            // Update pose display
+            document.getElementById('detectedPose').textContent = data.pose;
+            document.getElementById('poseName').textContent = data.pose;
+            
+            // Update confidence
+            if (data.confidence) {
+                const percent = Math.round(data.confidence * 100);
+                document.getElementById('confidencePercent').textContent = percent + '%';
+                document.getElementById('confidenceValue').textContent = percent + '%';
+                document.getElementById('confidenceFill').style.width = percent + '%';
+                
+                // Color coding
+                if (percent >= 80) {
+                    document.getElementById('confidenceFill').style.background = "linear-gradient(to right, #BF9004, #A67C00)";
+                    document.getElementById('detectedPose').style.color = "#BF9004";
+                } else if (percent >= 60) {
+                    document.getElementById('confidenceFill').style.background = "linear-gradient(to right, #A67C00, #8C6B00)";
+                    document.getElementById('detectedPose').style.color = "#A67C00";
+                } else {
+                    document.getElementById('confidenceFill').style.background = "linear-gradient(to right, #590202, #400101)";
+                    document.getElementById('detectedPose').style.color = "#590202";
+                }
+            }
+            
+            // Check match
+            const selectedPose = document.getElementById('posesDropdown').value;
+            const feedbackDiv = document.getElementById('matchFeedback');
+            
+            if (selectedPose !== "none" && data.pose === selectedPose) {
+                window.matchCount++;
+                feedbackDiv.className = "match-feedback match-correct";
+                feedbackDiv.innerHTML = '<i class="fas fa-check-circle"></i> Perfect Match!';
+                feedbackDiv.style.display = "block";
+            } else if (selectedPose !== "none") {
+                feedbackDiv.className = "match-feedback match-incorrect";
+                feedbackDiv.innerHTML = `<i class="fas fa-times-circle"></i> Expected: ${selectedPose}`;
+                feedbackDiv.style.display = "block";
+            } else {
+                feedbackDiv.style.display = "none";
+            }
+            
+            updateStats();
+        };
+        
+        window.updateConnectionStatus = function(status, isConnected) {
+            document.getElementById('connectionStatus').textContent = status;
+            document.querySelector('.status-dot').style.background = isConnected ? "#BF9004" : "#590202";
+            document.querySelector('.status-dot').style.animation = isConnected ? "pulse 2s infinite" : "none";
+            
+            updateDebugInfo('backend', isConnected ? 'connected' : 'error', status);
+        };
+        
+        // ===== INITIALIZATION =====
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log("🚀 YogaFlow AI Starting...");
+            
+            // Test backend connection
+            setTimeout(() => {
+                fetch('http://localhost:5000/test')
+                    .then(r => r.json())
+                    .then(data => {
+                        updateDebugInfo('backend', 'connected', `Backend OK (${data.classes} poses)`);
+                        showNotification(`AI model loaded with ${data.classes} poses`, "success");
+                    })
+                    .catch(err => {
+                        updateDebugInfo('backend', 'error', 'Backend not connected');
+                        showNotification("Cannot connect to AI backend. Run: python app.py", "error");
+                    });
+            }, 500);
+            
+            // Check camera availability
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                updateDebugInfo('camera', 'available', 'Camera API available');
+            } else {
+                updateDebugInfo('camera', 'error', 'No camera API');
+                showNotification("Your browser doesn't support camera access", "error");
+            }
+            
+            // Show camera permission overlay after 1 second
+            setTimeout(() => {
+                if (!window.cameraGranted) {
+                    document.getElementById('cameraPermissionOverlay').style.display = 'flex';
+                }
+            }, 1000);
+        });
+        
+        // Make functions globally available
+        window.startSession = startSession;
+        window.endSession = endSession;
+        window.showNotification = showNotification;
+        window.updateDebugInfo = updateDebugInfo;
+        window.simpleVisualization = false; // Start with advanced mode
+        addVisualizationStyles();
+    </script>
+</body>
+</html>
